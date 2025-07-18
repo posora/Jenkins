@@ -1,0 +1,58 @@
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: jenkins-agent
+  namespace: devops
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: jenkins-agent
+  template:
+    metadata:
+      labels:
+        app: jenkins-agent
+    spec:
+      nodeName: k8s-node3
+      serviceAccount: jenkins-k8s-sa
+      containers:
+      - name: jenkins-agent
+        securityContext:
+          runAsUser: 1000      
+          runAsGroup: 994
+        image: jenkins/inbound-agent:latest-jdk17
+        imagePullPolicy: IfNotPresent
+        env: 
+          - name: JENKINS_URL
+            value: "http://jenkins-service.devops.svc.cluster.local:8080"
+          - name: JENKINS_SECRET
+            value: "c723943102cfe1fd32cd2bcc40e19675ad214218266b2263a6c7b2531be70452"
+          - name: JENKINS_AGENT_NAME
+            value: "slave1"
+        resources:
+          limits:
+            cpu: 1000m
+            memory: 1Gi
+          requests:
+            cpu: 500m
+            memory: 512Mi
+        volumeMounts:
+        - name: jenkins-agent-volume
+          subPath: jenkins-home
+          mountPath: /home/jenkins
+        - name: docker-sock
+          mountPath: /var/run/docker.sock
+        - name: docker-bin
+          mountPath: /usr/bin/docker
+      volumes:
+      - name: jenkins-agent-volume
+        persistentVolumeClaim:
+          claimName: jenkins-agent-data
+      - name: docker-sock
+        hostPath:
+          path: /var/run/docker.sock
+          type: Socket
+      - name: docker-bin
+        hostPath:
+          path: /usr/bin/docker
+          type: File
