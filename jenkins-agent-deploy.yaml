@@ -18,8 +18,8 @@ spec:
       containers:
       - name: jenkins-agent
         securityContext:
-          runAsUser: 1000      
-          runAsGroup: 994
+          runAsUser: 0      
+          runAsGroup: 0
         image: jenkins/inbound-agent:latest-jdk17
         imagePullPolicy: IfNotPresent
         env: 
